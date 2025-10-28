@@ -1,0 +1,76 @@
+name: Win-ARM64
+
+permissions: # added using https://github.com/step-security/secure-workflows
+  contents: read
+
+jobs:
+  windows-amd64:
+    name: Windows-AMD64
+    runs-on: windows-latest
+    timeout-minutes: 30
+
+    defaults:
+      run:
+        working-directory: src/github.com/containerd/containerd
+
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          path: src/github.com/containerd/containerd
+
+      - uses: ./src/github.com/containerd/containerd/.github/actions/install-go
+
+      - name: Set env
+        shell: bash
+        run: |
+          echo "GOPATH=${{ github.workspace }}" >> $GITHUB_ENV
+          echo "${{ github.workspace }}/bin" >> $GITHUB_PATH
+
+      - name: Build amd64
+        env:
+          GOOS: windows
+          GOARCH: amd64
+        run: |
+          make binaries
+
+      - name: Upload artifacts (windows_amd64)
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        with:
+          name: windows_amd64
+          path: src/github.com/containerd/containerd/bin/
+  
+  windows-arm64:
+    name: Windows-ARM64
+    runs-on: windows-latest
+    timeout-minutes: 30
+
+    defaults:
+      run:
+        working-directory: src/github.com/containerd/containerd
+
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          path: src/github.com/containerd/containerd
+
+      - uses: ./src/github.com/containerd/containerd/.github/actions/install-go
+
+      - name: Set env
+        shell: bash
+        run: |
+          echo "GOPATH=${{ github.workspace }}" >> $GITHUB_ENV
+          echo "${{ github.workspace }}/bin" >> $GITHUB_PATH
+
+      - name: Build arm64
+        env:
+          GOOS: windows
+          GOARCH: arm64
+        run: |
+          make binaries
+
+      - name: Upload artifacts (windows_arm64)
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        with:
+          name: windows_arm64
+          path: src/github.com/containerd/containerd/bin/
+
