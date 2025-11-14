@@ -25,14 +25,19 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/containerd/containerd/v2/core/remotes"
 	"github.com/containerd/errdefs"
 	"github.com/containerd/log"
 	digest "github.com/opencontainers/go-digest"
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 )
 
-func (r dockerFetcher) FetchReferrers(ctx context.Context, dgst digest.Digest, artifactTypes ...string) ([]ocispec.Descriptor, error) {
-	rc, size, err := r.openReferrers(ctx, dgst, artifactTypes...)
+func (r dockerFetcher) FetchReferrers(ctx context.Context, dgst digest.Digest, opts ...remotes.FetchReferrersOpt) ([]ocispec.Descriptor, error) {
+	var config remotes.FetchReferrersConfig
+	for _, opt := range opts {
+		opt(ctx, &config)
+	}
+	rc, size, err := r.openReferrers(ctx, dgst, config)
 	if err != nil {
 		if errdefs.IsNotFound(err) {
 			return []ocispec.Descriptor{}, nil
@@ -40,6 +45,11 @@ func (r dockerFetcher) FetchReferrers(ctx context.Context, dgst digest.Digest, a
 		return nil, err
 	}
 	defer rc.Close()
+	if size < 0 {
+		size = MaxManifestSize
+	} else if size > MaxManifestSize {
+		return nil, fmt.Errorf("referrers index size %d exceeds maximum allowed %d: %w", size, MaxManifestSize, errdefs.ErrNotFound)
+	}
 
 	var index ocispec.Index
 	dec := json.NewDecoder(io.LimitReader(rc, size))
@@ -50,13 +60,13 @@ func (r dockerFetcher) FetchReferrers(ctx context.Context, dgst digest.Digest, a
 		return nil, fmt.Errorf("unexpected data after JSON object")
 	}
 
-	if len(artifactTypes) == 0 {
+	if len(config.ArtifactTypes) == 0 {
 		return index.Manifests, nil
 	}
 
 	var referrers []ocispec.Descriptor
 	tFilter := map[string]struct{}{}
-	for _, t := range artifactTypes {
+	for _, t := range config.ArtifactTypes {
 		tFilter[t] = struct{}{}
 	}
 	for _, desc := range index.Manifests {
@@ -67,7 +77,7 @@ func (r dockerFetcher) FetchReferrers(ctx context.Context, dgst digest.Digest, a
 	return referrers, nil
 }
 
-func (r dockerFetcher) openReferrers(ctx context.Context, dgst digest.Digest, artifactTypes ...string) (io.ReadCloser, int64, error) {
+func (r dockerFetcher) openReferrers(ctx context.Context, dgst digest.Digest, config remotes.FetchReferrersConfig) (io.ReadCloser, int64, error) {
 	mediaType := ocispec.MediaTypeImageIndex
 	ctx = log.WithLogger(ctx, log.G(ctx).WithField("digest", dgst))
 
@@ -91,9 +101,16 @@ func (r dockerFetcher) openReferrers(ctx context.Context, dgst digest.Digest, ar
 	var firstErr error
 	for i, host := range hosts {
 		req := r.request(host, http.MethodGet, "referrers", dgst.String())
-		for _, artifactType := range artifactTypes {
+		for _, artifactType := range config.ArtifactTypes {
 			if err := req.addQuery("artifactType", artifactType); err != nil {
 				return nil, 0, err
+			}
+		}
+		for k, vs := range config.QueryFilters {
+			for _, v := range vs {
+				if err := req.addQuery(k, v); err != nil {
+					return nil, 0, err
+				}
 			}
 		}
 		if err := req.addNamespace(r.refspec.Hostname()); err != nil {

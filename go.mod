@@ -12,7 +12,7 @@ require (
 	github.com/containerd/btrfs/v2 v2.0.0
 	github.com/containerd/cgroups/v3 v3.1.0
 	github.com/containerd/console v1.0.5
-	github.com/containerd/containerd/api v1.10.0-beta.1
+	github.com/containerd/containerd/api v1.10.0
 	github.com/containerd/continuity v0.4.5
 	github.com/containerd/errdefs v1.0.0
 	github.com/containerd/errdefs/pkg v0.3.0
@@ -23,7 +23,7 @@ require (
 	github.com/containerd/log v0.1.0
 	github.com/containerd/nri v0.10.0
 	github.com/containerd/otelttrpc v0.1.0
-	github.com/containerd/platforms v1.0.0-rc.1
+	github.com/containerd/platforms v1.0.0-rc.2
 	github.com/containerd/plugin v1.0.0
 	github.com/containerd/ttrpc v1.2.7
 	github.com/containerd/typeurl/v2 v2.2.3
@@ -42,7 +42,7 @@ require (
 	github.com/google/go-cmp v0.7.0
 	github.com/google/uuid v1.6.0
 	github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus v1.1.0
-	github.com/intel/goresctrl v0.9.0
+	github.com/intel/goresctrl v0.10.0
 	github.com/klauspost/compress v1.18.1
 	github.com/mdlayher/vsock v1.2.1
 	github.com/moby/locker v1.0.1
@@ -78,7 +78,7 @@ require (
 	golang.org/x/mod v0.29.0
 	golang.org/x/sync v0.17.0
 	golang.org/x/sys v0.37.0
-	golang.org/x/time v0.9.0
+	golang.org/x/time v0.14.0
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250804133106-a7a43d27e69b
 	google.golang.org/grpc v1.76.0
 	google.golang.org/protobuf v1.36.10
@@ -173,5 +173,3 @@ exclude (
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2
 )
-
-replace github.com/containerd/containerd/api => ./api

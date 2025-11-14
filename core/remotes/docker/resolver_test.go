@@ -645,6 +645,28 @@ func TestResolveProxyFallback(t *testing.T) {
 	}
 }
 
+func TestAddQuery(t *testing.T) {
+	req := &request{path: "/foo"}
+	if err := req.addQuery("bar", "123"); err != nil {
+		t.Fatal(err)
+	}
+	if exp := "/foo?bar=123"; req.path != exp {
+		t.Fatalf("unexpected path %q, expected %q", req.path, exp)
+	}
+	if err := req.addQuery("baz", "456"); err != nil {
+		t.Fatal(err)
+	}
+	if exp := "/foo?bar=123&baz=456"; req.path != exp {
+		t.Fatalf("unexpected path %q, expected %q", req.path, exp)
+	}
+	if err := req.addQuery("baz", "789"); err != nil {
+		t.Fatal(err)
+	}
+	if exp := "/foo?bar=123&baz=456&baz=789"; req.path != exp {
+		t.Fatalf("unexpected path %q, expected %q", req.path, exp)
+	}
+}
+
 func flipLocalhost(host string) string {
 	if strings.HasPrefix(host, "127.0.0.1") {
 		return "localhost" + host[9:]
@@ -905,6 +927,7 @@ type testContent struct {
 	mediaType    string
 	artifactType string
 	content      []byte
+	skipLength   bool
 }
 
 type contentOpt func(*testContent)
@@ -941,7 +964,11 @@ func (tc testContent) Digest() digest.Digest {
 
 func (tc testContent) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", tc.mediaType)
-	w.Header().Add("Content-Length", strconv.Itoa(len(tc.content)))
+	if !tc.skipLength {
+		w.Header().Add("Content-Length", strconv.Itoa(len(tc.content)))
+	} else {
+		w.Header().Set("Content-Length", "")
+	}
 	w.Header().Add("Docker-Content-Digest", tc.Digest().String())
 	w.WriteHeader(http.StatusOK)
 	w.Write(tc.content)

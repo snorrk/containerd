@@ -1,3 +1,5 @@
+//go:build !linux
+
 /*
    Copyright The containerd Authors.
 
@@ -14,15 +16,14 @@
    limitations under the License.
 */
 
-package server
+package v2
 
-const (
-	CPUUsageMetrics      = "cpu"
-	MemoryUsageMetrics   = "memory"
-	NetworkUsageMetrics  = "network"
-	DiskIOMetrics        = "diskIO"
-	DiskUsageMetrics     = "disk"
-	ProcessMetrics       = "process"
-	MiscellaneousMetrics = "misc"
-	ContainerSpecMetrics = "container_spec"
+import (
+	"context"
+
+	"github.com/containerd/containerd/v2/plugins/services/warning"
 )
+
+func emitPlatformWarnings(ctx context.Context, warnings warning.Service) {
+	// NOP
+}

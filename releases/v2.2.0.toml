@@ -9,13 +9,11 @@ ignore_deps = [ "github.com/containerd/containerd" ]
 # previous release
 previous = "v2.1.0"
 
-pre_release = true
+pre_release = false
 
 preface = """\
 The second minor release of containerd 2.x focuses on continued stability alongside
 new features and improvements. This is the second time-based released for containerd.
-
-This is a beta release and some functionality is still under development.
 """
 
 postface = """\
